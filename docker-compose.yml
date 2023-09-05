@@ -1,0 +1,51 @@
+version: "3.4"
+services:
+  nginx:
+    build: './docker/nginx/'
+    depends_on:
+      - php
+      - mysql
+    networks:
+      - backend
+    ports:
+      - '${NGINX_PORT}:80'
+    volumes:
+      - ./root/:/var/www/html/
+  php:
+    build: './docker/php/'
+    networks:
+      - backend
+    volumes:
+      - ./root/:/var/www/html/
+      - ./docker/php/config/config.ini:/usr/local/etc/php/conf.d/uploads.ini
+
+  mysql:
+    image: mysql:8.0
+    ports:
+      - '${DB_CONTAINER_PORT}:3306'
+    networks:
+      - backend
+    volumes:
+      - ./root/:/var/www/html/
+      - mysql-volume:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: '${DB_DATABASE}'
+      MYSQL_USER: '${DB_USERNAME}'
+      MYSQL_PASSWORD: '${DB_PASSWORD}'
+      MYSQL_ROOT_PASSWORD: '${DB_ROOT_PASSWORD}'
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      - PMA_ARBITRARY=10
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+      - UPLOAD_LIMIT=99999999999999
+    ports:
+      - '${PHPMYADMIN_PORT}:80'
+    networks:
+      - backend
+
+networks:
+  backend:
+volumes:
+  mysql-volume:
